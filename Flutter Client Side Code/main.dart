@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:isl/page.dart';
+import 'package:isl/MainHomePage.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: DemoPage(),
+      home: MainHomePage(),
     );
   }
 }
@@ -42,6 +42,7 @@ class _CameraScreenState extends State<CameraScreen> {
   late CameraController _cameraController;
   late Socket _socket;
   bool _isStreaming = false;
+  String _serverMessage = "";
 
   @override
   void initState() {
@@ -52,7 +53,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
   void _initializeCamera() async {
     try {
-      _cameraController = CameraController(cameras[0], ResolutionPreset.low);
+      _cameraController = CameraController(cameras[0], ResolutionPreset.medium);
       await _cameraController.initialize();
       setState(() {});
     } catch (e) {
@@ -62,8 +63,8 @@ class _CameraScreenState extends State<CameraScreen> {
 
   void _connectToServer() async {
     try {
-      _socket = await Socket.connect('192.168.31.133', 12344);
-      print('Connected to server at 192.168.31.133:12344');
+      _socket = await Socket.connect('192.168.31.133', 12343);
+      print('Connected to server at 192.168.31.133:12343');
       _receiveMessagesFromServer();
     } catch (e) {
       print('Failed to connect to server: $e');
@@ -156,6 +157,11 @@ class _CameraScreenState extends State<CameraScreen> {
                 onPressed: _isStreaming ? _stopStreaming : null,
                 child: Text('Stop Streaming'),
               ),
+              // SizedBox(height: 20),
+              // Text(
+              //   'Server Message: $_serverMessage',
+              //   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              // ),
             ],
           ),
         ],
