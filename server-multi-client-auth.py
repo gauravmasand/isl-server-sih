@@ -6,7 +6,7 @@ import os
 import jwt as pyjwt  # Import PyJWT properly to avoid conflicts
 from bson import ObjectId  # Import ObjectId to handle MongoDB ID properly
 from concurrent.futures import ThreadPoolExecutor
-# from auth_utils import verify_user_token  # Import the token verification function
+from auth_utils import get_token_details  # Import the token verification function
 
 # JWT and MongoDB Configuration
 DB_URI = "mongodb+srv://doadmin:kZ43I56U9m8XC70G@dbaas-db-7264100-23ad3afa.mongo.ondigitalocean.com/admin?authSource=admin&replicaSet=dbaas-db-7264100&tls=true"
@@ -63,37 +63,42 @@ def handle_client(client_socket, client_address):
     print(f"Client connected from {client_address}")
     
     # if verify_user_token(client_socket=client_socket, client_address=client_address):
+    # Verify the token and get user details
+    user_id = get_token_details(client_socket, client_address)
+    if not user_id:
+        return  # If verification fails, stop further processing
+
 
     # Expect the first message to contain the JWT token
-    try:
-        token_message = client_socket.recv(1024).decode().strip()
-        if not token_message.startswith("Authorization: Bearer "):
-            print(f"Connection refused: Invalid token format from {client_address}")
-            client_socket.close()
-            return
-        token = token_message.split(" ")[2]
-        # Validate the token
-        decoded_token = pyjwt.decode(token, JWT_SECRET, algorithms=['HS256'])
-        user_id = decoded_token.get('id')
+    # try:
+    #     token_message = client_socket.recv(1024).decode().strip()
+    #     if not token_message.startswith("Authorization: Bearer "):
+    #         print(f"Connection refused: Invalid token format from {client_address}")
+    #         client_socket.close()
+    #         return
+    #     token = token_message.split(" ")[2]
+    #     # Validate the token
+    #     decoded_token = pyjwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+    #     user_id = decoded_token.get('id')
 
-        # Convert user_id to ObjectId for querying MongoDB
-        try:
-            object_id = ObjectId(user_id)
-        except Exception as e:
-            print(f"Connection refused: Invalid user ID format from {client_address}. Error: {e}")
-            client_socket.close()
-            return
+    #     # Convert user_id to ObjectId for querying MongoDB
+    #     try:
+    #         object_id = ObjectId(user_id)
+    #     except Exception as e:
+    #         print(f"Connection refused: Invalid user ID format from {client_address}. Error: {e}")
+    #         client_socket.close()
+    #         return
 
-        print(f"Connection authorized for user {user_id} from {client_address}")
+    #     print(f"Connection authorized for user {user_id} from {client_address}")
 
-    except pyjwt.InvalidTokenError as e:
-        print(f"Connection refused: Invalid token from {client_address}. Error: {e}")
-        client_socket.close()
-        return
-    except Exception as e:
-        print(f"Connection refused: Error receiving token from {client_address}. Error: {e}")
-        client_socket.close()
-        return
+    # except pyjwt.InvalidTokenError as e:
+    #     print(f"Connection refused: Invalid token from {client_address}. Error: {e}")
+    #     client_socket.close()
+    #     return
+    # except Exception as e:
+    #     print(f"Connection refused: Error receiving token from {client_address}. Error: {e}")
+    #     client_socket.close()
+    #     return
 
     # Handle receiving and sending in separate threads using executor
     receive_thread = threading.Thread(target=receive_image, args=(client_socket, client_address))
